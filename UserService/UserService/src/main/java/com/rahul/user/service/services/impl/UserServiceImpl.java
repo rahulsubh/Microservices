@@ -44,15 +44,17 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public List<User> getAllUser() {
-        return userRepository.findAll();
+        List<User> users = userRepository.findAll();
+        for(User user : users){
+            List<Rating> ratings = getRatingsForUser(user.getUserId());
+            user.setRatings(ratings);
+        }
+        return users;
     }
 
-    @Override
-    public User getUser(String userId) {
+    private List<Rating> getRatingsForUser(String userId) {
 
-        User user = userRepository.findById(userId).
-                orElseThrow(() -> new ResourceNotFoundException("User with given id is not found on server !! : " + userId));
-        Rating[] ratingOfUser = restTemplate.getForObject("http://RATINGSERVICE/ratings/users/"+user.getUserId(), Rating[].class);
+        Rating[] ratingOfUser = restTemplate.getForObject("http://RATINGSERVICE/ratings/users/"+userId, Rating[].class);
 //        logger.info("{} ",forObject);
         List<Rating> ratings = Arrays.stream(ratingOfUser).toList();
 
@@ -63,6 +65,16 @@ public class UserServiceImpl implements UserService {
             return rating;
         }).collect(Collectors.toList());
 
+        return ratingList;
+    }
+
+    @Override
+    public User getUser(String userId) {
+
+        User user = userRepository.findById(userId).
+                orElseThrow(() -> new ResourceNotFoundException("User with given id is not found on server !! : " + userId));
+
+        List<Rating> ratingList = getRatingsForUser(user.getUserId());
 
         user.setRatings(ratingList);
 
