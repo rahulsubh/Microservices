@@ -8,6 +8,7 @@ import io.github.resilience4j.retry.annotation.Retry;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -19,6 +20,7 @@ public class UserController {
     @Autowired
     private UserService userService;
 
+
     @PostMapping
     public ResponseEntity<User> createUser(@RequestBody User user){
         User user1 = userService.saveUser(user);
@@ -26,6 +28,7 @@ public class UserController {
     }
 
     int retryCount = 1;
+
 
     @GetMapping("/{userId}")
     //@CircuitBreaker(name = "ratingHotelBreaker",fallbackMethod = "ratingHotelFallback")
@@ -41,6 +44,7 @@ public class UserController {
     //creating fallback method for circuitbreaker when service is down.
     public ResponseEntity<User> ratingHotelFallback(String userId,Exception ex){
 
+        ex.printStackTrace();
         User user = User.builder()
                 .email("dummy@gmail.com")
                 .name("Dummy")
@@ -49,6 +53,7 @@ public class UserController {
                 .build();
         return new ResponseEntity<>(user,HttpStatus.OK);
     }
+
 
     @GetMapping
     public ResponseEntity<List<User>> getAllUser(){
